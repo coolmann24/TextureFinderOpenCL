@@ -8,7 +8,7 @@ kernel void kernelFile(global int *faces, global int *facecount, global int *fou
 	int i;
 	for(i=0; i < (*facecount); i++)
 	{
-		int tex = getTextureType(get_global_id(0) + faces[i*5] - ((*xlength)/2), get_global_id(1) + (*ymin), get_global_id(2) + faces[i*5+2]- ((*zlength)/2));
+		int tex = getTextureType(get_global_id(0) + faces[i*5] - ((*xlength)/2), get_global_id(1) + (*ymin) + faces[i*5 + 1], get_global_id(2) + faces[i*5+2]- ((*zlength)/2));
 		if(compatibleRotation(tex, faces[i*5 + 4], faces[i*5 + 3])==0)
 		{
 			foundHere=0;

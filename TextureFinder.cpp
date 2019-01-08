@@ -52,41 +52,41 @@ int main()
 	int facecount = 32;
 	const int arraysize = 160;//5 times facecount
 	std::array<int, arraysize> formation =
-		{{0, 0, 0, 0, 2,
-			1, 0, 0, 0, 3,
-			2, 0, 0, 0, 3,
-			3, 0, 0, 0, 3,
-			4, 0, 0, 0, 2,
-			5, 0, 0, 0, 2,
-			6, 0, 0, 0, 3,
-			7, 0, 0, 0, 3,
+		{{0, 0, 0, 4, 3,
+			1, 0, 0, 4, 3,
+			2, 0, 0, 4, 3,
+			3, 0, 0, 4, 3,
+			4, 0, 0, 4, 3,
+			5, 0, 0, 4, 3,
+			6, 0, 0, 4, 3,
+			7, 0, 0, 4, 1,
 
-			0, 0, 1, 0, 3,
-			1, 0, 1, 0, 3,
-			2, 0, 1, 0, 1,
-			3, 0, 1, 0, 0,
-			4, 0, 1, 0, 0,
-			5, 0, 1, 0, 2,
-			6, 0, 1, 0, 1,
-			7, 0, 1, 0, 1,
+			0, 1, 0, 4, 2,
+			1, 1, 0, 4, 1,
+			2, 1, 0, 4, 0,
+			3, 1, 0, 4, 3,
+			4, 1, 0, 4, 0,
+			5, 1, 0, 4, 1,
+			6, 1, 0, 4, 3,
+			7, 1, 0, 4, 1,
 
-			0, 0, 2, 0, 2,
-			1, 0, 2, 0, 1,
-			2, 0, 2, 0, 0,
-			3, 0, 2, 0, 2,
-			4, 0, 2, 0, 3,
-			5, 0, 2, 0, 2,
-			6, 0, 2, 0, 3,
-			7, 0, 2, 0, 2,
+			0, 2, 0, 4, 1,
+			1, 2, 0, 4, 2,
+			2, 2, 0, 4, 3,
+			3, 2, 0, 4, 3,
+			4, 2, 0, 4, 2,
+			5, 2, 0, 4, 1,
+			6, 2, 0, 4, 3,
+			7, 2, 0, 4, 3,
 
-			0, 0, 3, 0, 0,
-			1, 0, 3, 0, 0,
-			2, 0, 3, 0, 3,
-			3, 0, 3, 0, 1,
-			4, 0, 3, 0, 0,
-			5, 0, 3, 0, 3,
-			6, 0, 3, 0, 1,
-			7, 0, 3, 0, 2 }} ;//x, y, z, faceid, rotation
+			0, 3, 0, 4, 3,
+			1, 3, 0, 4, 3,
+			2, 3, 0, 4, 1,
+			3, 3, 0, 4, 3,
+			4, 3, 0, 4, 1,
+			5, 3, 0, 4, 0,
+			6, 3, 0, 4, 2,
+			7, 3, 0, 4, 1 }} ;//x, y, z, faceid, rotation
 
 
 	//0=top, 1=bottom, 2=west, 3=east, 4=south, 5=north
@@ -117,20 +117,22 @@ int main()
 	kernel.setArg(5, yminbuf);
 
 	cl::CommandQueue queue(context, device);
-	queue.enqueueNDRangeKernel(kernel, cl::NDRange(NULL), cl::NDRange(xlength, yrangesize, zlength));
+	std::cout<<std::to_string(queue.enqueueNDRangeKernel(kernel, cl::NDRange(NULL), cl::NDRange(xlength, yrangesize, zlength)));
 
 	if (allrot)
 	{
 		int *first = rotate90deg(&formation[0], facecount);
 
-		for (int i = 0; i < facecount * 5; i++)
-		{
-			std::cout << first[i] << " ";
-			if (i % 5 == 4)std::cout << std::endl;
-		}
+		
 
 		int *second = rotate90deg(first, facecount);
 		int *third = rotate90deg(second, facecount);
+
+		/*for (int i = 0; i < facecount * 5; i++)
+		{
+			std::cout << third[i] << " ";
+			if (i % 5 == 4)std::cout << std::endl;
+		}*/
 
 		cl::Buffer facesbuf2(context, CL_MEM_READ_WRITE | CL_MEM_HOST_READ_ONLY | CL_MEM_COPY_HOST_PTR, sizeof(int) * arraysize, first);
 		cl::Buffer facesbuf3(context, CL_MEM_READ_WRITE | CL_MEM_HOST_READ_ONLY | CL_MEM_COPY_HOST_PTR, sizeof(int) * arraysize, second);
@@ -147,7 +149,7 @@ int main()
 		kernel2.setArg(4, zlengthbuf);
 		kernel2.setArg(5, yminbuf);
 
-		queue.enqueueNDRangeKernel(kernel2, cl::NDRange(NULL), cl::NDRange(xlength, yrangesize, zlength));
+		std::cout << std::to_string(queue.enqueueNDRangeKernel(kernel2, cl::NDRange(NULL), cl::NDRange(xlength, yrangesize, zlength))) << std::endl;
 
 
 
@@ -159,7 +161,7 @@ int main()
 		kernel3.setArg(4, zlengthbuf);
 		kernel3.setArg(5, yminbuf);
 
-		queue.enqueueNDRangeKernel(kernel3, cl::NDRange(NULL), cl::NDRange(xlength, yrangesize, zlength));
+		std::cout << std::to_string(queue.enqueueNDRangeKernel(kernel3, cl::NDRange(NULL), cl::NDRange(xlength, yrangesize, zlength))) << std::endl;
 
 
 
@@ -171,7 +173,7 @@ int main()
 		kernel4.setArg(4, zlengthbuf);
 		kernel4.setArg(5, yminbuf);
 
-		queue.enqueueNDRangeKernel(kernel4, cl::NDRange(NULL), cl::NDRange(xlength, yrangesize, zlength));
+		std::cout << std::to_string(queue.enqueueNDRangeKernel(kernel4, cl::NDRange(NULL), cl::NDRange(xlength, yrangesize, zlength))) << std::endl;
 
 		queue.finish();
 	}
