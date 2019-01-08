@@ -6,6 +6,8 @@
 #include <CL/cl.hpp>
 #include <array>
 
+int *rotate90deg(int *formation, int facecount);
+
 
 int main()
 {
@@ -50,45 +52,46 @@ int main()
 	int facecount = 32;
 	const int arraysize = 160;//5 times facecount
 	std::array<int, arraysize> formation =
-		{{0, 0, 0, 0, 0,
-			1, 0, 0, 0, 0,
+		{{0, 0, 0, 0, 2,
+			1, 0, 0, 0, 3,
 			2, 0, 0, 0, 3,
-			3, 0, 0, 0, 0,
+			3, 0, 0, 0, 3,
 			4, 0, 0, 0, 2,
-			5, 0, 0, 0, 0,
+			5, 0, 0, 0, 2,
 			6, 0, 0, 0, 3,
-			7, 0, 0, 0, 2,
+			7, 0, 0, 0, 3,
 
-			0, 0, 1, 0, 1,
-			1, 0, 1, 0, 0,
-			2, 0, 1, 0, 3,
-			3, 0, 1, 0, 1,
+			0, 0, 1, 0, 3,
+			1, 0, 1, 0, 3,
+			2, 0, 1, 0, 1,
+			3, 0, 1, 0, 0,
 			4, 0, 1, 0, 0,
-			5, 0, 1, 0, 0,
-			6, 0, 1, 0, 2,
-			7, 0, 1, 0, 0,
+			5, 0, 1, 0, 2,
+			6, 0, 1, 0, 1,
+			7, 0, 1, 0, 1,
 
-			0, 0, 2, 0, 1,
+			0, 0, 2, 0, 2,
 			1, 0, 2, 0, 1,
-			2, 0, 2, 0, 3,
-			3, 0, 2, 0, 3,
-			4, 0, 2, 0, 0,
-			5, 0, 2, 0, 0,
-			6, 0, 2, 0, 1,
+			2, 0, 2, 0, 0,
+			3, 0, 2, 0, 2,
+			4, 0, 2, 0, 3,
+			5, 0, 2, 0, 2,
+			6, 0, 2, 0, 3,
 			7, 0, 2, 0, 2,
 
 			0, 0, 3, 0, 0,
-			1, 0, 3, 0, 3,
-			2, 0, 3, 0, 2,
+			1, 0, 3, 0, 0,
+			2, 0, 3, 0, 3,
 			3, 0, 3, 0, 1,
-			4, 0, 3, 0, 1,
-			5, 0, 3, 0, 1,
-			6, 0, 3, 0, 0,
-			7, 0, 3, 0, 1 }} ;//x, y, z, faceid, rotation
+			4, 0, 3, 0, 0,
+			5, 0, 3, 0, 3,
+			6, 0, 3, 0, 1,
+			7, 0, 3, 0, 2 }} ;//x, y, z, faceid, rotation
 
 
 	//0=top, 1=bottom, 2=west, 3=east, 4=south, 5=north
 
+	bool allrot = true;
 	
 
 	std::array<int, 3> loc =  {0, 0, 0} ;
@@ -116,12 +119,111 @@ int main()
 	cl::CommandQueue queue(context, device);
 	queue.enqueueNDRangeKernel(kernel, cl::NDRange(NULL), cl::NDRange(xlength, yrangesize, zlength));
 
+	if (allrot)
+	{
+		int *first = rotate90deg(&formation[0], facecount);
+
+		for (int i = 0; i < facecount * 5; i++)
+		{
+			std::cout << first[i] << " ";
+			if (i % 5 == 4)std::cout << std::endl;
+		}
+
+		int *second = rotate90deg(first, facecount);
+		int *third = rotate90deg(second, facecount);
+
+		cl::Buffer facesbuf2(context, CL_MEM_READ_WRITE | CL_MEM_HOST_READ_ONLY | CL_MEM_COPY_HOST_PTR, sizeof(int) * arraysize, first);
+		cl::Buffer facesbuf3(context, CL_MEM_READ_WRITE | CL_MEM_HOST_READ_ONLY | CL_MEM_COPY_HOST_PTR, sizeof(int) * arraysize, second);
+		cl::Buffer facesbuf4(context, CL_MEM_READ_WRITE | CL_MEM_HOST_READ_ONLY | CL_MEM_COPY_HOST_PTR, sizeof(int) * arraysize, third);
+
+
+
+
+		cl::Kernel kernel2(program, "kernelFile");
+		kernel2.setArg(0, facesbuf2);
+		kernel2.setArg(1, facecountbuf);
+		kernel2.setArg(2, resultbuf);
+		kernel2.setArg(3, xlengthbuf);
+		kernel2.setArg(4, zlengthbuf);
+		kernel2.setArg(5, yminbuf);
+
+		queue.enqueueNDRangeKernel(kernel2, cl::NDRange(NULL), cl::NDRange(xlength, yrangesize, zlength));
+
+
+
+		cl::Kernel kernel3(program, "kernelFile");
+		kernel3.setArg(0, facesbuf3);
+		kernel3.setArg(1, facecountbuf);
+		kernel3.setArg(2, resultbuf);
+		kernel3.setArg(3, xlengthbuf);
+		kernel3.setArg(4, zlengthbuf);
+		kernel3.setArg(5, yminbuf);
+
+		queue.enqueueNDRangeKernel(kernel3, cl::NDRange(NULL), cl::NDRange(xlength, yrangesize, zlength));
+
+
+
+		cl::Kernel kernel4(program, "kernelFile");
+		kernel4.setArg(0, facesbuf4);
+		kernel4.setArg(1, facecountbuf);
+		kernel4.setArg(2, resultbuf);
+		kernel4.setArg(3, xlengthbuf);
+		kernel4.setArg(4, zlengthbuf);
+		kernel4.setArg(5, yminbuf);
+
+		queue.enqueueNDRangeKernel(kernel4, cl::NDRange(NULL), cl::NDRange(xlength, yrangesize, zlength));
+
+		queue.finish();
+	}
+
 	queue.enqueueReadBuffer(resultbuf, CL_TRUE, 0, sizeof(int) * 3, loc.data());
+
+	
 
 	queue.finish();
 
 	std::cout << "X: " << loc[0] << " Y: " << loc[1] << " Z: " << loc[2];
 
 
+}
+
+int *rotate90deg(int *formation, int facecount)//counterclockwise
+{
+	int *result = new int[facecount * 5];
+
+	for (int i = 0; i < facecount; i++)
+	{
+		result[i * 5] = formation[i * 5 + 2];
+		result[i * 5 + 1] = formation[i * 5 + 1];
+		result[i * 5 + 2] = -1 * formation[i * 5];
+
+		if (formation[i * 5 + 3] == 0) result[i * 5 + 3] = 0;
+		if (formation[i * 5 + 3] == 1) result[i * 5 + 3] = 1;
+		if (formation[i * 5 + 3] == 2) result[i * 5 + 3] = 4;
+		if (formation[i * 5 + 3] == 3) result[i * 5 + 3] = 5;
+		if (formation[i * 5 + 3] == 4) result[i * 5 + 3] = 3;
+		if (formation[i * 5 + 3] == 5) result[i * 5 + 3] = 2;
+
+		if (formation[i * 5 + 3] == 0)
+		{
+			if (formation[i * 5 + 4] == 0) result[i * 5 + 4] = 3;
+			if (formation[i * 5 + 4] == 1) result[i * 5 + 4] = 0;
+			if (formation[i * 5 + 4] == 2) result[i * 5 + 4] = 1;
+			if (formation[i * 5 + 4] == 3) result[i * 5 + 4] = 2;
+		}
+		else if (formation[i * 5 + 3] == 1)
+		{
+			if (formation[i * 5 + 4] == 0) result[i * 5 + 4] = 1;
+			if (formation[i * 5 + 4] == 1) result[i * 5 + 4] = 2;
+			if (formation[i * 5 + 4] == 2) result[i * 5 + 4] = 3;
+			if (formation[i * 5 + 4] == 3) result[i * 5 + 4] = 0;
+		}
+		else
+		{
+			result[i * 5 + 4] = formation[i * 5 + 4];
+		}
+	}
+
+	return result;
 }
 
