@@ -4,24 +4,26 @@ int compatibleRotation(int generatedType, int rotation, int blockFace);
 
 kernel void kernelFile(global int *faces, global int *facecount, global int *found, global int *xlength, global int *zlength, global int *ymin)
 {
-	int foundHere=1;
-	int i;
-	for(i=0; i < (*facecount); i++)
-	{
-		int tex = getTextureType(get_global_id(0) + faces[i*5] - ((*xlength)/2), get_global_id(1) + (*ymin) + faces[i*5+1], get_global_id(2) + faces[i*5+2]- ((*zlength)/2));
-		if(compatibleRotation(tex, faces[i*5 + 4], faces[i*5 + 3])==0)
+	if(found[1] == 0){
+		int foundHere=1;
+		int i;
+		for(i=0; i < (*facecount); i++)
 		{
-			foundHere=0;
-			break;
+			int tex = getTextureType(get_global_id(0) + faces[i*5] - ((*xlength)/2), get_global_id(1) + (*ymin) + faces[i*5+1], get_global_id(2) + faces[i*5+2]- ((*zlength)/2));
+			if(compatibleRotation(tex, faces[i*5 + 4], faces[i*5 + 3])==0)
+			{
+				foundHere=0;
+				break;
+			}
 		}
-	}
-	
-	if(foundHere==1)
-	{
-		found[0] = get_global_id(0)- ((*xlength)/2);
-		found[1] = get_global_id(1) + (*ymin);
-		found[2] = get_global_id(2)- ((*zlength)/2);
 		
+		if(foundHere==1)
+		{
+			found[0] = get_global_id(0)- ((*xlength)/2);
+			found[1] = get_global_id(1) + (*ymin);
+			found[2] = get_global_id(2)- ((*zlength)/2);
+			
+		}
 	}
 }
 
